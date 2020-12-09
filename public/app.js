@@ -51,7 +51,7 @@ async function createRoom() {
   ).innerText = `Current room is ${roomId} - You are the caller!`;
 
   // Code for creating room above
-  const offer = roomSnapshot.data().offer;
+  offer = roomSnapshot.data().offer;
   await peerConnection.setRemoteDescription(offer);
   const answer = await peerConnection.createAnswer();
   await peerConnection.setLocalDescription(answer);
@@ -69,10 +69,41 @@ async function createRoom() {
   });
 
   // Code for creating a room below
-
-  // Code for creating a room above
+  roomRef.onSnapshot(async (snapshot) => {
+    console.log('Got updated room:', snapshot.data());
+    const data = snapshot.data();
+    if (!peerConnection.currentRemoteDescription && data.answer) {
+      console.log('Set remote description: ', data.answer);
+      const answer = new RTCSessionDescription(data.answer);
+      await peerConnection.setRemoteDescription(answer);
+    }
+  });
 
   // Code for collecting ICE candidates below
+  async function collectIceCandidates(
+    roomRef,
+    peerConnection,
+    localName,
+    remoteName
+  ) {
+    const candidatesCollection = roomRef.collection(localName);
+
+    peerConnection.addEventListener('icecandidate', (event) => {
+      if (event.candidate) {
+        const json = event.candidate.toJSON();
+        candidatesCollection.add(json);
+      }
+    });
+
+    roomRef.collection(remoteName).onSnapshot((snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === 'added') {
+          const candidate = new RTCIceCandidate(change.doc.data());
+          peerConneciton.addIceCandidate(candidate);
+        }
+      });
+    });
+  }
 
   // Code for collecting ICE candidates above
 
