@@ -49,20 +49,7 @@ async function createRoom() {
   document.querySelector(
     '#currentRoom'
   ).innerText = `Current room is ${roomId} - You are the caller!`;
-
   // Code for creating room above
-  offer = roomSnapshot.data().offer;
-  await peerConnection.setRemoteDescription(offer);
-  const answer = await peerConnection.createAnswer();
-  await peerConnection.setLocalDescription(answer);
-
-  const roomWithAnswer = {
-    answer: {
-      type: answer.type,
-      sdp: answer.sdp,
-    },
-  };
-  await roomRef.update(roomWithAnswer);
 
   localStream.getTracks().forEach((track) => {
     peerConnection.addTrack(track, localStream);
@@ -78,7 +65,19 @@ async function createRoom() {
       await peerConnection.setRemoteDescription(answer);
     }
   });
+  // Code for creating a room above
+  const offer = roomSnapshot.data().offer;
+  await peerConnection.setRemoteDescription(offer);
+  const answer = await peerConnection.createAnswer();
+  await peerConnection.setLocalDescription(answer);
 
+  const roomWithAnswer = {
+    answer: {
+      type: answer.type,
+      sdp: answer.sdp,
+    },
+  };
+  await roomRef.update(roomWithAnswer);
   // Code for collecting ICE candidates below
   async function collectIceCandidates(
     roomRef,
@@ -104,7 +103,6 @@ async function createRoom() {
       });
     });
   }
-
   // Code for collecting ICE candidates above
 
   peerConnection.addEventListener('track', (event) => {
