@@ -66,7 +66,7 @@ async function createRoom() {
     }
   });
   // Code for creating a room above
-  const offer = roomSnapshot.data().offer;
+  offer = roomSnapshot.data().offer;
   await peerConnection.setRemoteDescription(offer);
   const answer = await peerConnection.createAnswer();
   await peerConnection.setLocalDescription(answer);
@@ -114,7 +114,19 @@ async function createRoom() {
   });
 
   // Listening for remote session description below
+  const localStream = await getUserMedia({ vide: true, audio: true });
+  const peerConnection = new RTCPeerConnection(iceConfig);
+  localStream.getTracks().forEach((track) => {
+    peerConnection.addTrack(track, localStream);
+  });
 
+  const remoteStream = MediaStream();
+  const remoteVideo = document.querySelector('#remoteVideo');
+  remoteVideo.srcObject = remoteStream;
+
+  peerConnection.addEventListener('track', async (event) => {
+    remoteStream.addTrack(event.track, remoteStream);
+  });
   // Listening for remote session description above
 
   // Listen for remote ICE candidates below
